@@ -1,0 +1,796 @@
+:root {
+  --bg: #12161c;
+  --surface: #1c222b;
+  --surface-active: #232b36;
+  --border: #323b48;
+  --divider: #262d38;
+  --text: #e8ecf1;
+  --text-2: #c6ceda;
+  --muted: #9aa4b2;
+  --accent: #ff8a3d;
+  --accent-ink: #1a1206;
+  --ok: #7ee0a1;
+  --warn: #ffb37a;
+
+  --font-body: 'Inter Variable', Inter, system-ui, sans-serif;
+  --font-display: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* No double-tap zoom on controls, so quick taps on a phone register at once. */
+button,
+input,
+a {
+  touch-action: manipulation;
+}
+
+.app {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 12px 20px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  border-bottom: 1px solid var(--divider);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+}
+
+.spacer {
+  flex-grow: 1;
+}
+
+.chip {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-2);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  margin: 0;
+  font-size: 12px;
+}
+
+.workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.stage {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.text-2 {
+  color: var(--text-2);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tool {
+  min-height: 44px;
+  padding: 0 14px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tool[aria-pressed='true'] {
+  background: var(--surface-active);
+  border-color: var(--accent);
+}
+
+.tool:disabled {
+  color: #5f6b7a;
+  cursor: default;
+}
+
+.tool.dashed {
+  border-style: dashed;
+  border-color: #4a5567;
+}
+
+.route-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.route-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip-button {
+  min-width: 44px;
+  min-height: 36px;
+  padding: 0 8px;
+  background: var(--surface-active);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.row .chip-button {
+  min-width: 36px;
+}
+
+.read-chip {
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: #1a1206;
+  font-weight: 600;
+}
+
+.route-grid .tool {
+  padding: 0 4px;
+}
+
+.stepper {
+  padding: 4px 4px 4px 12px;
+}
+
+.stepper-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepper-controls strong {
+  min-width: 64px;
+  text-align: center;
+}
+
+.step {
+  width: 44px;
+  height: 36px;
+  background: var(--surface-active);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.step:disabled {
+  color: #5f6b7a;
+  cursor: default;
+}
+
+.link {
+  background: none;
+  border: 0;
+  padding: 6px 0;
+  color: var(--warn);
+  cursor: pointer;
+}
+
+.field.drawing {
+  cursor: crosshair;
+}
+
+.headline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.player:focus {
+  outline: none;
+}
+
+.player:focus-visible > :nth-child(1) {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+/* The field takes whatever space is left. FieldSvg scales the drawing to fit it. */
+.field {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.field-svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  color: var(--muted);
+}
+
+.status .warn {
+  color: var(--warn);
+}
+
+.app.loading {
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.playbook-name {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin: 0 -6px;
+  color: var(--muted);
+  max-width: 100%;
+}
+
+.playbook-name:hover,
+.playbook-name:focus {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.ok {
+  color: var(--ok);
+}
+
+.warn {
+  color: var(--warn);
+}
+
+.library {
+  flex: 0 0 264px;
+  border-right: 1px solid var(--divider);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.input {
+  min-height: 40px;
+  min-width: 0;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.pill {
+  padding: 4px 10px;
+  min-height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.pill[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.play-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.play-list .empty {
+  padding: 10px;
+}
+
+.play-row {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.play-row:hover {
+  background: var(--surface);
+}
+
+.play-row[aria-current='true'] {
+  background: var(--surface-active);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.play-number {
+  flex: none;
+  min-width: 18px;
+  color: var(--muted);
+}
+
+.play-row[aria-current='true'] .play-number,
+.play-number.dupe {
+  color: var(--warn);
+}
+
+.play-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.play-formation {
+  flex: none;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.name-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.name-row .number {
+  flex: 0 0 64px;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.card.warnings {
+  border-color: var(--warn);
+}
+
+.warning-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--warn);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.warn-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warn);
+}
+
+a.warn {
+  text-decoration: none;
+}
+
+.link.start {
+  align-self: flex-start;
+}
+
+.rules-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rules-editor .eyebrow {
+  margin-top: 8px;
+}
+
+.rule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.rule-row > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.rule-row > .input {
+  flex: 0 0 150px;
+}
+
+.rule-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rule-input .input {
+  width: 76px;
+  padding: 0 8px;
+  text-align: right;
+}
+
+.rule-row input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+}
+
+.tool.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.tool.primary:disabled {
+  opacity: 0.6;
+  color: var(--accent-ink);
+}
+
+.page-preview {
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--border);
+  line-height: 0;
+}
+
+.page-preview svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tool.danger {
+  color: #ff9c9c;
+}
+
+.panel {
+  flex: 0 0 300px;
+  border-left: 1px solid var(--divider);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+input[type='range'] {
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.segmented button {
+  min-height: 44px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.segmented.four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.segmented.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.segmented button small {
+  display: block;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+/* Narrow windows and phones: the page scrolls and the field sets its own height from its shape. */
+@media (max-width: 820px) {
+  html,
+  body,
+  #root {
+    height: auto;
+  }
+
+  .app {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .workspace {
+    flex-direction: column;
+  }
+
+  /* On a phone the field comes first, then the play's settings, then the library. */
+  .library {
+    order: 3;
+    flex: none;
+    border-right: 0;
+    border-top: 1px solid var(--divider);
+    overflow: visible;
+  }
+
+  .stage {
+    flex: none;
+    padding: 12px;
+  }
+
+  .field {
+    flex: none;
+    width: 100%;
+    aspect-ratio: var(--field-ratio);
+    max-height: 80dvh;
+  }
+
+  .panel {
+    flex: none;
+    border-left: 0;
+    border-top: 1px solid var(--divider);
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    overflow: visible;
+  }
+}
+
+/* View mode: one play, as large as the screen allows, with big targets for flipping. */
+.app.viewer {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  /* Keep clear of the notch and the home indicator when installed on a phone. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.viewer-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.viewer-number {
+  flex: none;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 8px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.viewer-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.viewer-title h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewer-tags {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.viewer-tags .pill {
+  flex: none;
+  min-height: 36px;
+  padding: 4px 14px;
+}
+
+.viewer-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 8px;
+  /* The viewer handles sideways swipes itself. */
+  touch-action: none;
+}
+
+.viewer .field {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+  max-height: none;
+}
+
+.viewer-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 0 14px 8px;
+  color: var(--text-2);
+}
+
+.viewer-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--divider);
+}
+
+.viewer-nav .tool {
+  min-width: 112px;
+  min-height: 52px;
+  font-size: 16px;
+}
+
+/* iOS zooms the page when a focused text box has text smaller than 16px. */
+@media (max-width: 820px) {
+  .input,
+  .playbook-name {
+    font-size: 16px;
+  }
+}

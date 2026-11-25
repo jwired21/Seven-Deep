@@ -1,0 +1,8 @@
+node_modules
+dist
+*.local
+.DS_Store
+.claude/settings.local.json
+
+# The original build brief. Kept on the owner's computer only, not in the repository.
+BRIEF.md
