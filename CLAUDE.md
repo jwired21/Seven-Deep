@@ -116,6 +116,9 @@ https://docs.google.com/document/d/15JrxewWiQQD0bDb3VIQXrtZ8Fqhrx1SBG2BGPGzXPm4
 
 ## Hosting
 
+Live at https://jwired21.github.io/Seven-Deep/ from the public repository
+https://github.com/jwired21/Seven-Deep (first deployed 2026-11-25).
+
 `.github/workflows/deploy.yml` tests, builds, and publishes `dist/` to GitHub Pages on every
 push to `main`. The build uses a relative base, so it works from the repository's subpath
 with no extra setting. The repository needs Settings > Pages > Source set to "GitHub Actions".
