@@ -6,6 +6,9 @@ import type { Point } from '../model/types'
 import { usePlayback, useTimeline } from '../playback/playbackStore'
 import { getAssignment } from '../routes/assignments'
 import { useEditor } from '../store/editorStore'
+import { moveTrace } from '../trace/trace'
+import { TraceLayer } from '../trace/TraceLayer'
+import { updateTrace, useTrace } from '../trace/traceStore'
 import { FIELD_COLORS } from './fieldColors'
 import { FieldSvg } from './FieldSvg'
 import { PlayersLayer } from './PlayersLayer'
@@ -33,6 +36,11 @@ export function Field({ readOnly = false }: { readOnly?: boolean }) {
   const time = Math.min(timeline.end, Math.max(timeline.start, playbackTime))
   const positions = playbackActive ? new Map(play.players.map((p) => [p.id, timeline.positionOf(p.id, time)])) : undefined
   const ball = playbackActive ? timeline.ball(time) : null
+
+  // A picture to trace over. Only the editor shows it, never view mode.
+  const traceState = useTrace()
+  const trace = !readOnly && !traceState.hidden ? traceState.trace : null
+  const adjustingTrace = trace !== null && traceState.adjusting
 
   /** Tapping a receiver chooses who the ball goes to. */
   const pickTarget = (id: string) => {
@@ -88,6 +96,7 @@ export function Field({ readOnly = false }: { readOnly?: boolean }) {
       >
         {(t) => (
           <>
+            {trace && !adjustingTrace && <TraceLayer trace={trace} transform={t} />}
             <RoutesLayer
               play={play}
               transform={t}
@@ -107,6 +116,15 @@ export function Field({ readOnly = false }: { readOnly?: boolean }) {
               onMove={movePlayer}
               constrain={(p) => lineupSpot(p, play.ballOn, rules)}
             />
+            {/* While it is being lined up the picture sits on top, so a drag anywhere on it moves it. */}
+            {trace && adjustingTrace && (
+              <TraceLayer
+                trace={trace}
+                transform={t}
+                adjusting
+                onMove={(center) => updateTrace((tr) => moveTrace(tr, center, view))}
+              />
+            )}
             {ball && (
               <ellipse
                 data-part="live-ball"

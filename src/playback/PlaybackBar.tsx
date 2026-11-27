@@ -40,7 +40,7 @@ function usePlaybackClock(start: number, end: number) {
  * Watch the play develop: play and pause, a slider to scrub back and forth, who the ball
  * goes to, half speed, and a switch to see what happens on a blitz.
  */
-export function PlaybackBar() {
+export function PlaybackBar({ editing = false }: { editing?: boolean }) {
   const play = useEditor((s) => s.play)
   const { setPassTo } = useEditor.getState()
   const timeline = useTimeline()
@@ -83,13 +83,30 @@ export function PlaybackBar() {
           max={timeline.end}
           step={0.01}
           value={shown}
-          onChange={(e) => usePlayback.setState({ active: true, playing: false, time: Number(e.target.value) })}
+          onChange={(e) => {
+            const value = Number(e.target.value)
+            // Dragging all the way back to the start is the same as Reset: the field unlocks.
+            if (value <= timeline.start + 0.005) resetPlayback()
+            else usePlayback.setState({ active: true, playing: false, time: value })
+          }}
         />
         <span className="playback-time">{describeTime(shown)}</span>
-        <button type="button" className="tool" disabled={!active} onClick={resetPlayback}>
-          Reset
+        <button
+          type="button"
+          className={active && editing ? 'tool attention' : 'tool'}
+          disabled={!active}
+          onClick={resetPlayback}
+        >
+          {editing ? 'Back to editing' : 'Reset'}
         </button>
       </div>
+
+      {active && editing && (
+        <p className="playback-locked" role="status">
+          Playback is showing, so players are locked and a tap picks who the ball goes to. Press{' '}
+          <strong>Back to editing</strong> or Esc to move players and change routes.
+        </p>
+      )}
 
       <div className="playback-row options">
         {receivers.length > 0 && !blitz && isPass && (

@@ -850,3 +850,18 @@ input[type='range'] {
     font-size: 12px;
   }
 }
+
+/* The way out of playback, made hard to miss while the field is locked. */
+.tool.attention {
+  border-color: var(--accent);
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.playback-locked {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--text-2);
+}

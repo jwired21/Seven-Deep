@@ -9,8 +9,10 @@ import { formatYd } from './model/format'
 import { describeSpot, POSITION_NAMES } from './model/players'
 import { ReadOrder, RoutePanel } from './panel/RoutePanel'
 import { PlaybackBar } from './playback/PlaybackBar'
+import { resetPlayback, usePlayback } from './playback/playbackStore'
 import { checkPlay } from './rules/checkPlay'
 import { RulesCheck, RulesPanel } from './rules/RulesPanel'
+import { TracePanel } from './trace/TracePanel'
 import { endCoalescing, redo, undo, useEditor } from './store/editorStore'
 import { Viewer } from './viewer/Viewer'
 
@@ -18,6 +20,12 @@ import { Viewer } from './viewer/Viewer'
 function useUndoShortcuts() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Esc leaves playback and unlocks the field.
+      if (e.key === 'Escape' && usePlayback.getState().active) {
+        e.preventDefault()
+        resetPlayback()
+        return
+      }
       // Enter or Esc finishes a freehand route.
       if ((e.key === 'Enter' || e.key === 'Escape') && useEditor.getState().drawingFor) {
         e.preventDefault()
@@ -48,6 +56,7 @@ export function App() {
   const hydrated = useEditor((s) => s.hydrated)
   const saveStatus = useEditor((s) => s.saveStatus)
   const viewing = useApp((s) => s.viewing)
+  const playbackActive = usePlayback((s) => s.active)
   const offlineReady = useApp((s) => s.offlineReady)
   const { loadFormation, flipFormation, setBallOn, setGender } = useEditor.getState()
   const canUndo = useStore(useEditor.temporal, (h) => h.pastStates.length > 0)
@@ -126,7 +135,7 @@ export function App() {
 
           <Field />
 
-          <PlaybackBar />
+          <PlaybackBar editing />
 
           <div className="status">
             <span>Grid: {GRID} yard</span>
@@ -181,8 +190,10 @@ export function App() {
                 <p className="muted small">Drag to move, or use the arrow keys. Snaps to whole yards.</p>
               </>
             ) : (
-              <p className="muted small">
-                Tap a player to give them a route, a run, a handoff, or motion. Drag anyone to move them.
+              <p className={playbackActive ? 'warn small' : 'muted small'}>
+                {playbackActive
+                  ? 'Playback is showing. Press Back to editing under the field to select and move players.'
+                  : 'Tap a player to give them a route, a run, a handoff, or motion. Drag anyone to move them.'}
               </p>
             )}
           </section>
@@ -227,6 +238,8 @@ export function App() {
               ))}
             </div>
           </section>
+
+          <TracePanel />
 
           <RulesPanel />
         </aside>

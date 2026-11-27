@@ -104,6 +104,11 @@ https://docs.google.com/document/d/15JrxewWiQQD0bDb3VIQXrtZ8Fqhrx1SBG2BGPGzXPm4
   cannot be dragged, and tapping a receiver picks the target. Reset unlocks it.
 - The playback clock measures from the moment play was pressed, not frame to frame, so a slow
   device drops frames instead of slowing the play down.
+- The tracing picture (`src/trace`) is a guide, not part of the play. It is placed and sized
+  in yards (`center`, `width`, `aspect`) and drawn through the field transform, but it lives in
+  its own store and is never saved, exported, printed, shown in view mode, or put in undo.
+  While "Move picture" is on it is drawn on top and takes the drag; otherwise it ignores the
+  pointer so players stay draggable.
 - Flip and mirror are different. `flipPlayers()` flips a formation's strength: a player whose
   mirror spot is taken by a teammate stays put, so in Empty only the back crosses over.
   `mirrorPlayers()` is the true mirror for whole plays (phase 5), where everyone crosses.
@@ -146,6 +151,7 @@ src/
   app/        app-level state: view mode, offline status
   viewer/     full-screen view mode for flipping through plays
   playback/   the play worked out in time (pure, tested), the playback clock, and its controls
+  trace/      a picture laid on the field to trace over: placement in yards (pure, tested), its layer and panel
   storage/    IndexedDB, autosave, and the JSON export file with its validator
   store/      Zustand editor store; undo and redo through zundo
   field/      SVG field and draggable players (React)
@@ -170,3 +176,6 @@ Folders added by later phases: nothing new.
   A play button that can pause, a slider to scrub, all seven players moving at once with
   motion and delayed releases, and the ball snapped, handed off, pitched, or thrown to the
   chosen receiver. Works in the editor and in view mode.
+- [x] 12. Trace over a picture (added by the owner on 2026-11-27; built the same day). Load or
+  paste a screenshot of a play, line it up behind the field, and trace it with the players
+  and the freehand route tool. Still needs trying with a real screenshot and on a phone.
