@@ -4,6 +4,7 @@ import { Field } from '../field/Field'
 import { searchPlays, stepPlay, swipeStep, tagCounts } from '../library/library'
 import { formatYd } from '../model/format'
 import { readOrderText } from '../pdf/playbookPages'
+import { PlaybackBar } from '../playback/PlaybackBar'
 import { checkPlay } from '../rules/checkPlay'
 import { useEditor } from '../store/editorStore'
 
@@ -136,6 +137,8 @@ export function Viewer() {
       >
         <Field readOnly />
       </main>
+
+      <PlaybackBar />
 
       {(reads || warnings.length > 0) && (
         <div className="viewer-info">

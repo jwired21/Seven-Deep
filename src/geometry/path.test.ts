@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { arrowHead, lastSegment, nearestPointOnPath, pathLength, splitPath } from './path'
+import { arrowHead, distanceAlongPath, lastSegment, nearestPointOnPath, pathLength, pointAt, splitPath } from './path'
 
 const L = [
   { x: 0, y: 0 },
@@ -83,5 +83,31 @@ describe('nearestPointOnPath', () => {
   it('handles a single point and an empty path', () => {
     expect(nearestPointOnPath([{ x: 1, y: 1 }], { x: 9, y: 9 })).toEqual({ x: 1, y: 1 })
     expect(nearestPointOnPath([], { x: 9, y: 9 })).toBeNull()
+  })
+})
+
+describe('pointAt', () => {
+  it('walks a distance along the path, around corners', () => {
+    expect(pointAt(L, 2)).toEqual({ x: 0, y: 2 })
+    expect(pointAt(L, 5)).toEqual({ x: 0, y: 5 })
+    expect(pointAt(L, 8)).toEqual({ x: 3, y: 5 })
+  })
+
+  it('stops at the start and the end', () => {
+    expect(pointAt(L, -3)).toEqual({ x: 0, y: 0 })
+    expect(pointAt(L, 99)).toEqual({ x: 5, y: 5 })
+    expect(pointAt([{ x: 4, y: 4 }], 2)).toEqual({ x: 4, y: 4 })
+  })
+})
+
+describe('distanceAlongPath', () => {
+  it('measures how far along the path its closest point is', () => {
+    expect(distanceAlongPath(L, { x: -2, y: 3 })).toBe(3)
+    expect(distanceAlongPath(L, { x: 4, y: 9 })).toBe(9)
+    expect(distanceAlongPath(L, { x: 0, y: -5 })).toBe(0)
+  })
+
+  it('is the inverse of pointAt for a point on the path', () => {
+    expect(distanceAlongPath(L, pointAt(L, 6.5))).toBeCloseTo(6.5, 9)
   })
 })

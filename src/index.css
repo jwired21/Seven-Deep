@@ -794,3 +794,59 @@ input[type='range'] {
     font-size: 16px;
   }
 }
+
+/* Playback: play and pause, the scrub slider, and who the ball goes to. */
+.playback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.viewer .playback {
+  padding: 0 14px 8px;
+}
+
+.playback-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.playback-row.options {
+  flex-wrap: wrap;
+  min-height: 36px;
+}
+
+.playback-row .chips {
+  align-items: center;
+}
+
+.playback-play {
+  min-width: 84px;
+}
+
+.playback-slider {
+  flex: 1;
+  min-width: 80px;
+}
+
+.playback-time {
+  min-width: 112px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip-button.wide {
+  padding: 0 12px;
+}
+
+.chip-button[aria-pressed='true'] {
+  border-color: var(--accent);
+}
+
+@media (max-width: 820px) {
+  .playback-time {
+    min-width: 0;
+    font-size: 12px;
+  }
+}

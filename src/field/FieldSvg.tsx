@@ -21,6 +21,8 @@ type Props = {
   onBackgroundPointerDown?: PointerEventHandler<SVGSVGElement>
   onPointerMove?: PointerEventHandler<SVGSVGElement>
   onPointerLeave?: PointerEventHandler<SVGSVGElement>
+  /** Draw the ball at rest on the line of scrimmage. Off while playback draws a moving one. */
+  showBall?: boolean
 }
 
 /**
@@ -36,6 +38,7 @@ export function FieldSvg({
   onBackgroundPointerDown,
   onPointerMove,
   onPointerLeave,
+  showBall = true,
 }: Props) {
   const view = fieldView(ballOn, rules)
   const t = createFieldTransform(view, { width, height })
@@ -212,6 +215,7 @@ export function FieldSvg({
           )}
         </g>
 
+        {showBall && (
         <ellipse
           data-part="ball"
           cx={ball.x}
@@ -223,6 +227,7 @@ export function FieldSvg({
           strokeOpacity={0.8}
           strokeWidth={1}
         />
+        )}
       </g>
 
       {children?.(t)}

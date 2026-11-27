@@ -83,6 +83,8 @@ export type EditorState = {
   setDelay(playerId: string, counts: number): void
   /** Where this route sits in the QB's progression. Null takes it out. One player per number. */
   setReadOrder(playerId: string, order: number | null): void
+  /** Chooses who the ball is thrown to in playback. Null goes back to the first read. */
+  setPassTo(playerId: string | null): void
   /** Removes the assignment in a slot. For a motion, the player's other paths move back to their start. */
   clearRoute(playerId: string, slot?: Slot): void
 
@@ -360,6 +362,13 @@ export const useEditor = create<EditorState>()(
               return readOrder === next ? rest : a
             }),
           })
+        },
+
+        setPassTo(playerId) {
+          const { play } = get()
+          if ((play.passTo ?? null) === playerId) return
+          const { passTo: _old, ...rest } = play
+          edit(playerId && play.players.some((p) => p.id === playerId) ? { ...rest, passTo: playerId } : rest)
         },
 
         clearRoute(playerId, slot = 'main') {

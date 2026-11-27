@@ -8,6 +8,7 @@ import { ballSpots, GRID, playingLength } from './model/defaults'
 import { formatYd } from './model/format'
 import { describeSpot, POSITION_NAMES } from './model/players'
 import { ReadOrder, RoutePanel } from './panel/RoutePanel'
+import { PlaybackBar } from './playback/PlaybackBar'
 import { checkPlay } from './rules/checkPlay'
 import { RulesCheck, RulesPanel } from './rules/RulesPanel'
 import { endCoalescing, redo, undo, useEditor } from './store/editorStore'
@@ -124,6 +125,8 @@ export function App() {
           </div>
 
           <Field />
+
+          <PlaybackBar />
 
           <div className="status">
             <span>Grid: {GRID} yard</span>

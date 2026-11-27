@@ -96,6 +96,14 @@ https://docs.google.com/document/d/15JrxewWiQQD0bDb3VIQXrtZ8Fqhrx1SBG2BGPGzXPm4
   a LAN address is not.
 - View mode (`src/viewer`) is read-only: `Field readOnly` attaches no drag handlers. On a
   narrow screen the app opens in view mode, and Edit opens the stacked editor.
+- Playback is computed, never stored. `buildTimeline()` in `src/playback/timeline.ts` turns a
+  play into positions over time, in yards and seconds, with the snap at 0 and motion before
+  it. The only thing saved is `passTo` on the play: who the ball goes to. Speeds live in
+  `SPEED` there. Anything new that moves needs a timeline test.
+- While playback is active the field is locked: players are drawn from the timeline and
+  cannot be dragged, and tapping a receiver picks the target. Reset unlocks it.
+- The playback clock measures from the moment play was pressed, not frame to frame, so a slow
+  device drops frames instead of slowing the play down.
 - Flip and mirror are different. `flipPlayers()` flips a formation's strength: a player whose
   mirror spot is taken by a teammate stays put, so in Empty only the back crosses over.
   `mirrorPlayers()` is the true mirror for whole plays (phase 5), where everyone crosses.
@@ -137,6 +145,7 @@ src/
   pdf/        print colors, the drawing surface, play diagrams, page layout, PDF output, preview
   app/        app-level state: view mode, offline status
   viewer/     full-screen view mode for flipping through plays
+  playback/   the play worked out in time (pure, tested), the playback clock, and its controls
   storage/    IndexedDB, autosave, and the JSON export file with its validator
   store/      Zustand editor store; undo and redo through zundo
   field/      SVG field and draggable players (React)
@@ -157,9 +166,7 @@ Folders added by later phases: nothing new.
 - [x] 8. Wrist coach sheet (size test passes; still needs a real print checked against a band)
 - [x] 9. Player cards
 - [x] 10. iPhone and offline (works offline from the built app; still needs a real iPhone, installed from an HTTPS host, tried in airplane mode)
-- [ ] 11. Playback (added by the owner on 2026-11-25, after the brief). Watch a play develop:
-  a play button that can pause, and a slider to scrub back and forth. All seven players move
-  along their paths at once, honoring motion and delayed releases. Click a receiver to choose
-  who the ball goes to, and the football flies there. Build it after phase 10 unless told
-  otherwise. Nothing in the data model needs to change first: paths are already in yards.
-  It will need a speed per player or per kind, and a `passTo` on the play.
+- [x] 11. Playback (added by the owner on 2026-11-25, after the brief; built 2026-11-26).
+  A play button that can pause, a slider to scrub, all seven players moving at once with
+  motion and delayed releases, and the ball snapped, handed off, pitched, or thrown to the
+  chosen receiver. Works in the editor and in view mode.

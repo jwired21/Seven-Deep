@@ -3,7 +3,10 @@ import { fieldView } from '../geometry/fieldLayout'
 import { createFieldTransform } from '../geometry/fieldTransform'
 import { lineupSpot, waypointSpot } from '../geometry/snap'
 import type { Point } from '../model/types'
+import { usePlayback, useTimeline } from '../playback/playbackStore'
+import { getAssignment } from '../routes/assignments'
 import { useEditor } from '../store/editorStore'
+import { FIELD_COLORS } from './fieldColors'
 import { FieldSvg } from './FieldSvg'
 import { PlayersLayer } from './PlayersLayer'
 import { RoutesLayer } from './RoutesLayer'
@@ -21,6 +24,22 @@ export function Field({ readOnly = false }: { readOnly?: boolean }) {
   const movePlayer = useEditor((s) => s.movePlayer)
   const addWaypoint = useEditor((s) => s.addWaypoint)
 
+  // Playback: once it is running or scrubbed, players and the ball are drawn where the
+  // timeline puts them, and nobody can be dragged until it is reset.
+  const timeline = useTimeline()
+  const playbackActive = usePlayback((s) => s.active)
+  const playbackTime = usePlayback((s) => s.time)
+  const locked = readOnly || playbackActive
+  const time = Math.min(timeline.end, Math.max(timeline.start, playbackTime))
+  const positions = playbackActive ? new Map(play.players.map((p) => [p.id, timeline.positionOf(p.id, time)])) : undefined
+  const ball = playbackActive ? timeline.ball(time) : null
+
+  /** Tapping a receiver chooses who the ball goes to. */
+  const pickTarget = (id: string) => {
+    const a = getAssignment(play, id)
+    if (a?.kind === 'route' && a.path.length > 0) useEditor.getState().setPassTo(id)
+  }
+
   /** While drawing freehand: the snapped spot under the pointer, in yards. */
   const [preview, setPreview] = useState<Point | null>(null)
 
@@ -34,7 +53,7 @@ export function Field({ readOnly = false }: { readOnly?: boolean }) {
   }
 
   const onBackgroundPointerDown = (e: PointerEvent<SVGSVGElement>) => {
-    if (readOnly) return
+    if (locked) return
     if (drawingFor) {
       if (e.button === 0) addWaypoint(pointerYd(e))
     } else {
@@ -65,6 +84,7 @@ export function Field({ readOnly = false }: { readOnly?: boolean }) {
         onBackgroundPointerDown={onBackgroundPointerDown}
         onPointerMove={onPointerMove}
         onPointerLeave={() => setPreview(null)}
+        showBall={!playbackActive}
       >
         {(t) => (
           <>
@@ -78,12 +98,29 @@ export function Field({ readOnly = false }: { readOnly?: boolean }) {
             <PlayersLayer
               players={play.players}
               transform={t}
-              selectedId={readOnly ? null : selectedId}
-              readOnly={readOnly}
+              selectedId={locked ? null : selectedId}
+              readOnly={locked}
+              positions={positions}
+              onPick={locked ? pickTarget : undefined}
+              targetId={locked ? timeline.targetId : null}
               onSelect={select}
               onMove={movePlayer}
               constrain={(p) => lineupSpot(p, play.ballOn, rules)}
             />
+            {ball && (
+              <ellipse
+                data-part="live-ball"
+                cx={t.toPx(ball.at).x}
+                cy={t.toPx(ball.at).y}
+                // A thrown ball grows a little at the top of its arc, as if coming toward you.
+                rx={Math.max(3, t.len(0.32)) * (1 + ball.height * 0.7)}
+                ry={Math.max(4.5, t.len(0.5)) * (1 + ball.height * 0.7)}
+                fill={FIELD_COLORS.ball}
+                stroke={FIELD_COLORS.line}
+                strokeWidth={1.25}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
           </>
         )}
       </FieldSvg>

@@ -25,6 +25,12 @@ type Props = {
   constrain(p: Point): Point
   /** Show the players without letting them be picked up or moved, for the view mode. */
   readOnly?: boolean
+  /** Where to draw each player instead of their lineup spot, by id. Used by playback. */
+  positions?: Map<string, Point>
+  /** When read-only: called when a player is tapped, to choose who the ball goes to. */
+  onPick?(id: string): void
+  /** Draws a ring around this player: the one the ball is going to. */
+  targetId?: string | null
 }
 
 type Drag = {
@@ -44,7 +50,18 @@ export const playerRadius = (scale: number) => Math.min(16, Math.max(9, scale * 
  * The seven players. Dragging shows a live, snapped preview held in local state and
  * commits once on release, so one drag is one undo step.
  */
-export function PlayersLayer({ players, transform: t, selectedId, onSelect, onMove, constrain, readOnly = false }: Props) {
+export function PlayersLayer({
+  players,
+  transform: t,
+  selectedId,
+  onSelect,
+  onMove,
+  constrain,
+  readOnly = false,
+  positions,
+  onPick,
+  targetId = null,
+}: Props) {
   const [drag, setDrag] = useState<Drag | null>(null)
 
   const r = playerRadius(t.scale)
@@ -122,8 +139,9 @@ export function PlayersLayer({ players, transform: t, selectedId, onSelect, onMo
   return (
     <g data-part="players" fontFamily={DISPLAY_FONT} fontWeight={700} textAnchor="middle">
       {ordered.map((player) => {
-        const held = drag?.id === player.id
-        const spot = held ? drag.spot : player.start
+        // A locked field never shows a drag, even one left over from the moment it locked.
+        const held = !readOnly && drag?.id === player.id
+        const spot = held ? drag.spot : (positions?.get(player.id) ?? player.start)
         const { x, y } = t.toPx(spot)
         const selected = player.id === selectedId
         const isCenter = player.label === 'C'
@@ -135,7 +153,15 @@ export function PlayersLayer({ players, transform: t, selectedId, onSelect, onMo
             data-player={player.label}
             className="player"
             transform={`translate(${x} ${y})`}
-            {...(readOnly
+            {...(readOnly && onPick
+              ? {
+                  role: 'button',
+                  'aria-label': `${player.label}, ${name}. Throw to this player.`,
+                  'aria-pressed': player.id === targetId,
+                  style: { cursor: 'pointer' },
+                  onClick: () => onPick(player.id),
+                }
+              : readOnly
               ? {
                   role: 'img',
                   'aria-label': `${player.label}, ${name}. ${describeSpot(spot)}.`,
@@ -166,6 +192,9 @@ export function PlayersLayer({ players, transform: t, selectedId, onSelect, onMo
                 strokeWidth={2}
                 strokeDasharray="4 3"
               />
+            )}
+            {player.id === targetId && (
+              <circle data-part="target" r={r + 4} fill="none" stroke="#FFFFFF" strokeWidth={2} />
             )}
             {isCenter ? (
               <rect x={-r * 0.93} y={-r * 0.93} width={r * 1.86} height={r * 1.86} rx={3} fill={player.color} />

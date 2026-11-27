@@ -94,6 +94,7 @@ function play(v: unknown, index: number): Play {
     ),
     ...(typeof o.notes === 'string' ? { notes: o.notes } : {}),
     ...(typeof o.mirroredFrom === 'string' ? { mirroredFrom: o.mirroredFrom } : {}),
+    ...(typeof o.passTo === 'string' && ids.has(o.passTo) ? { passTo: o.passTo } : {}),
   }
 }
 

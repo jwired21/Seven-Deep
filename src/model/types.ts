@@ -77,6 +77,8 @@ export type Play = {
   notes?: string
   /** Play id, when made by mirror. */
   mirroredFrom?: string
+  /** Player id: who the ball is thrown to when the play is played back. Defaults to the first read. */
+  passTo?: string
 }
 
 export type RulesProfile = {

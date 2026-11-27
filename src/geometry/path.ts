@@ -76,3 +76,41 @@ export function nearestPointOnPath(points: Vec[], p: Vec): Vec | null {
   }
   return best
 }
+
+/** The point a given distance along a polyline from its start. Stops at either end. */
+export function pointAt(points: Vec[], distance: number): Vec {
+  if (points.length === 0) return { x: 0, y: 0 }
+  if (distance <= 0) return points[0]
+  let walked = 0
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1]
+    const b = points[i]
+    const step = dist(a, b)
+    if (step > 0 && walked + step >= distance) {
+      const f = (distance - walked) / step
+      return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f }
+    }
+    walked += step
+  }
+  return points[points.length - 1]
+}
+
+/** How far along a polyline its closest point to `p` is, measured from the start. */
+export function distanceAlongPath(points: Vec[], p: Vec): number {
+  let best = 0
+  let bestDist = points.length ? dist(points[0], p) : 0
+  let walked = 0
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1]
+    const b = points[i]
+    const step = dist(a, b)
+    const f = step === 0 ? 0 : Math.min(1, Math.max(0, ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / (step * step)))
+    const d = dist({ x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f }, p)
+    if (d < bestDist) {
+      bestDist = d
+      best = walked + step * f
+    }
+    walked += step
+  }
+  return best
+}
