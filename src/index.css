@@ -239,6 +239,11 @@ a {
   cursor: crosshair;
 }
 
+/* A finger dragged across the field draws a line instead of scrolling the page. */
+.field.drawing .field-svg {
+  touch-action: none;
+}
+
 .headline {
   display: flex;
   align-items: center;

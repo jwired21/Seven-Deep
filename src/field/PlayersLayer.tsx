@@ -29,6 +29,11 @@ type Props = {
   positions?: Map<string, Point>
   /** When read-only: called when a player is tapped, to choose who the ball goes to. */
   onPick?(id: string): void
+  /**
+   * This player ignores the pointer, so a press on them reaches the field underneath.
+   * Used while their path is being drawn, because a hand-drawn line starts on the player.
+   */
+  passThroughId?: string | null
   /** Draws a ring around this player: the one the ball is going to. */
   targetId?: string | null
 }
@@ -61,6 +66,7 @@ export function PlayersLayer({
   positions,
   onPick,
   targetId = null,
+  passThroughId = null,
 }: Props) {
   const [drag, setDrag] = useState<Drag | null>(null)
 
@@ -153,7 +159,13 @@ export function PlayersLayer({
             data-player={player.label}
             className="player"
             transform={`translate(${x} ${y})`}
-            {...(readOnly && onPick
+            {...(player.id === passThroughId
+              ? {
+                  role: 'img',
+                  'aria-label': `${player.label}, ${name}. Drawing their path.`,
+                  style: { pointerEvents: 'none' as const },
+                }
+              : readOnly && onPick
               ? {
                   role: 'button',
                   'aria-label': `${player.label}, ${name}. Throw to this player.`,

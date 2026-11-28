@@ -104,7 +104,10 @@ export function dedupe(path: Point[]): Point[] {
 export function clampPath(path: Point[], playerStart: Point, bounds: Bounds): Point[] {
   return dedupe(
     path.map((p) => {
-      const abs = clampPoint({ x: playerStart.x + p.x, y: playerStart.y + p.y }, bounds)
+      const spot = { x: playerStart.x + p.x, y: playerStart.y + p.y }
+      const abs = clampPoint(spot, bounds)
+      // A point already in bounds is returned untouched, so off-grid points never drift.
+      if (abs.x === spot.x && abs.y === spot.y) return p
       return { x: abs.x - playerStart.x + 0, y: abs.y - playerStart.y + 0 }
     }),
   )

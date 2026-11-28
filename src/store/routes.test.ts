@@ -282,3 +282,100 @@ describe('freehand routes', () => {
     ])
   })
 })
+
+describe('hand-drawn lines', () => {
+  /** A loop of radius 2 yd around (12, 5), as a pointer would report it: many close points. */
+  const loop = Array.from({ length: 201 }, (_, i) => {
+    const a = (i / 200) * Math.PI * 2
+    return { x: 12 + 2 * Math.cos(a), y: 5 + 2 * Math.sin(a) }
+  })
+
+  it('keeps the curve: a loop stays within a tenth of a yard of the line as drawn, off the grid', () => {
+    state().startFreehand(idOf('Z'))
+    state().addStroke(loop)
+    const points = drawn('Z').slice(1)
+    expect(points.length).toBeGreaterThan(12)
+    expect(points.length).toBeLessThanOrEqual(150)
+    for (const p of points) expect(Math.abs(Math.hypot(p.x - 12, p.y - 5) - 2)).toBeLessThan(0.02)
+    expect(points.some((p) => !Number.isInteger(p.x))).toBe(true)
+    expect(route('Z')!.routeName).toBe('custom')
+  })
+
+  it('is one undo step, however many points it has', () => {
+    state().startFreehand(idOf('Z'))
+    const before = history().pastStates.length
+    state().addStroke(loop)
+    expect(history().pastStates.length).toBe(before + 1)
+    undo()
+    expect(route('Z')!.path).toEqual([])
+    redo()
+    expect(route('Z')!.path.length).toBeGreaterThan(12)
+  })
+
+  it('joins on to waypoints already clicked, and more can follow', () => {
+    state().startFreehand(idOf('Z'))
+    state().addWaypoint({ x: 8, y: 4 })
+    state().addStroke([
+      { x: 8, y: 4 },
+      { x: 9, y: 6.5 },
+      { x: 11.5, y: 7.5 },
+    ])
+    state().addWaypoint({ x: 15, y: 8 })
+    const points = drawn('Z')
+    expect(points[1]).toEqual({ x: 8, y: 4 })
+    expect(points.at(-2)).toEqual({ x: 11.5, y: 7.5 })
+    expect(points.at(-1)).toEqual({ x: 15, y: 8 })
+  })
+
+  it('stays inside the field', () => {
+    state().startFreehand(idOf('Z'))
+    state().addStroke([
+      { x: 8, y: 2 },
+      { x: 30, y: 4 },
+      { x: 60, y: 9 },
+    ])
+    const half = state().rules.fieldWidth / 2
+    for (const p of drawn('Z')) expect(p.x).toBeLessThanOrEqual(half)
+  })
+
+  it('keeps hand-drawn motion behind the line, and sets the player on the grid', () => {
+    state().startFreehand(idOf('Z'), 'motion')
+    state().addStroke([
+      { x: 8, y: -1 },
+      { x: 6, y: -2.6 },
+      { x: 3.4, y: 2 },
+    ])
+    const motion = getAssignment(state().play, idOf('Z'), 'motion')!
+    const path = absolutePath(state().play, player('Z'), motion)
+    for (const p of path) expect(p.y).toBeLessThanOrEqual(-1)
+    expect(path.at(-1)).toEqual({ x: 3, y: -1 })
+  })
+
+  it('travels with the player like any other path', () => {
+    state().startFreehand(idOf('Z'))
+    state().addStroke(loop)
+    state().stopFreehand()
+    const before = route('Z')!.path
+    state().movePlayer(idOf('Z'), { x: 5, y: -3 })
+    expect(route('Z')!.path).toEqual(before)
+  })
+
+  it('does nothing unless a path is being drawn', () => {
+    const before = state().play
+    state().addStroke(loop)
+    expect(state().play).toBe(before)
+  })
+})
+
+describe('drawing style', () => {
+  it('starts on curved, and the choice is a tool setting: not an undo step, and kept between paths', () => {
+    expect(state().drawingStyle).toBe('hand')
+    state().startFreehand(idOf('Z'))
+    const steps = history().pastStates.length
+    state().setDrawingStyle('points')
+    expect(history().pastStates.length).toBe(steps)
+    state().stopFreehand()
+    state().startFreehand(idOf('X'))
+    expect(state().drawingStyle).toBe('points')
+  })
+})

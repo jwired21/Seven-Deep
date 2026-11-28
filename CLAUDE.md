@@ -58,6 +58,15 @@ https://docs.google.com/document/d/15JrxewWiQQD0bDb3VIQXrtZ8Fqhrx1SBG2BGPGzXPm4
   "outside" means toward that player's sideline. After any change that moves players or the
   ball, run `refitRoutes()`: it rebuilds tree routes from their template and keeps freehand
   routes in bounds.
+- A freehand path is built two ways while it is being drawn, chosen with the Curved / Straight
+  buttons (`drawingStyle` in the store, a tool setting that is not saved or undone; Curved is
+  the default). Straight: a click adds a waypoint snapped to the grid (`addWaypoint()`).
+  Curved: a drag draws by hand (`addStroke()`), and a click does nothing: the pointer's positions
+  in yards, tidied by `tidyStroke()` in `src/geometry/stroke.ts` with the settings in `STROKE`,
+  kept off the grid so curves and loops survive, and committed once on release. Both make the
+  same thing, a `custom` path of points, so routes, playback, mirroring, and the PDF need
+  nothing special for curves. The player being drawn for ignores the pointer, so a line can
+  start on them.
 - Arrowheads and dashes come from `src/geometry/path.ts`, which is unit-agnostic so the PDF
   can reuse it.
 - A player has one assignment per slot: `motion`, `main` (route, run, or handoff), and `blitz`
@@ -179,3 +188,6 @@ Folders added by later phases: nothing new.
 - [x] 12. Trace over a picture (added by the owner on 2026-11-27; built the same day). Load or
   paste a screenshot of a play, line it up behind the field, and trace it with the players
   and the freehand route tool. Still needs trying with a real screenshot and on a phone.
+- [x] 13. Draw by hand (added by the owner on 2026-11-27; built the same day). While drawing a
+  freehand route, run, motion, or QB run, a drag with the mouse or a finger draws curves and
+  loops. Still needs trying with a real finger on a phone.

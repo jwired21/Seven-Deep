@@ -19,6 +19,9 @@ type Props = {
 const toD = (points: Vec[]) => points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x} ${p.y}`).join('')
 const toPoints = (points: Vec[]) => points.map((p) => `${p.x},${p.y}`).join(' ')
 
+/** True for a spot on the whole-yard grid, where clicked waypoints land. */
+const onGrid = (p: Point) => Math.abs(p.x - Math.round(p.x)) < 0.004 && Math.abs(p.y - Math.round(p.y)) < 0.004
+
 /** Line weight in pixels: lighter on a phone so seven paths stay readable. */
 export const routeStroke = (scale: number) => Math.min(3.5, Math.max(2.25, scale * 0.2))
 
@@ -112,7 +115,13 @@ export function RoutesLayer({ play, transform: t, drawingFor = null, drawingSlot
             )}
 
             {drawing &&
-              points.slice(1).map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={stroke * 1.1} fill={player.color} stroke="none" />)}
+              points.slice(1).map((p, i) =>
+                // A dot on each clicked waypoint, which sits on the grid, and on the end.
+                // The off-grid points of a hand-drawn line get none.
+                onGrid(t.toYd(p)) || i === points.length - 2 ? (
+                  <circle key={i} cx={p.x} cy={p.y} r={stroke * 1.1} fill={player.color} stroke="none" />
+                ) : null,
+              )}
 
             {previewPx && (previewPx.x !== end.x || previewPx.y !== end.y) && (
               <>

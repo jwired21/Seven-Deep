@@ -1,7 +1,8 @@
 import { temporal } from 'zundo'
 import { create } from 'zustand'
 import { applyFormation, flipFormationName, flipPlayers, FORMATIONS, getFormation } from '../formations/formations'
-import { fieldBounds, lineupBounds, lineupSpot, waypointSpot } from '../geometry/snap'
+import { clampPoint, fieldBounds, lineupBounds, lineupSpot, waypointSpot } from '../geometry/snap'
+import { tidyStroke } from '../geometry/stroke'
 import {
   duplicatePlay as copyOf,
   MAX_PLAY_NUMBER,
@@ -25,12 +26,24 @@ import {
 } from '../routes/assignments'
 import { sanitizeWristCoach } from '../pdf/wristCoach'
 import { fieldChanged, fitPlayToRules, sanitizeRules } from '../rules/rules'
-import { buildRoute, clampDepth, getRoute, isTreeRoute, type RouteId } from '../routes/routeTree'
+import { buildRoute, clampDepth, dedupe, getRoute, isTreeRoute, type RouteId } from '../routes/routeTree'
 
 export const MAX_DELAY_COUNTS = 3
 export const MAX_READS = 3
 
 /** The kinds of path that can be drawn by hand. */
+/**
+ * How a hand-drawn line is tidied, in yards: it may stray a tenth of a yard from the line
+ * as drawn, keeps at most 150 points, and ends in a straight piece for the arrowhead.
+ */
+export const STROKE = { tolerance: 0.1, maxPoints: 150, endLength: 0.75 }
+
+/**
+ * How a freehand path is being drawn. 'hand': drag, and the line follows the pointer with
+ * its curves. 'points': click, and each click adds a straight piece snapped to the grid.
+ */
+export type DrawingStyle = 'hand' | 'points'
+
 export type FreehandKind = 'route' | 'run' | 'motion' | 'qbRunIfBlitzed'
 
 export type SaveStatus = 'saved' | 'saving' | 'error'
@@ -54,6 +67,8 @@ export type EditorState = {
   /** The player whose freehand path is being drawn, if any, and which of their slots it is. */
   drawingFor: string | null
   drawingSlot: Slot
+  /** Curved by hand or straight by clicks. A tool setting, not part of the play or of undo. */
+  drawingStyle: DrawingStyle
 
   /** Moves a player to the legal, on-grid spot nearest `to`. Their paths go with them. */
   movePlayer(id: string, to: Point): void
@@ -115,7 +130,13 @@ export type EditorState = {
 
   startFreehand(playerId: string, kind?: FreehandKind): void
   /** Adds a waypoint at the on-grid spot nearest `at`, a field position in yards. */
+  setDrawingStyle(style: DrawingStyle): void
   addWaypoint(at: Point): void
+  /**
+   * Adds a line drawn by hand to the path being drawn: the pointer's positions on the field,
+   * in yards. It keeps its curves and loops and is not snapped to the grid. One undo step.
+   */
+  addStroke(points: Point[]): void
   stopFreehand(): void
 }
 
@@ -189,6 +210,7 @@ export const useEditor = create<EditorState>()(
         selectedId: null,
         drawingFor: null,
         drawingSlot: 'main',
+        drawingStyle: 'hand',
 
         movePlayer(id, to) {
           const { play, rules } = get()
@@ -520,6 +542,10 @@ export const useEditor = create<EditorState>()(
           set({ drawingFor: playerId, drawingSlot: slot, selectedId: playerId })
         },
 
+        setDrawingStyle(style) {
+          set({ drawingStyle: style })
+        },
+
         addWaypoint(at) {
           const { play, rules, drawingFor, drawingSlot } = get()
           const player = playerIn(play, drawingFor)
@@ -537,6 +563,31 @@ export const useEditor = create<EditorState>()(
           const next = withAssignment(play, { ...assignment, path: [...assignment.path, point] })
           // A longer motion moves where the player's route starts.
           edit(assignment.kind === 'motion' ? refitRoutes(next, rules) : next)
+        },
+
+        addStroke(points) {
+          const { play, rules, drawingFor, drawingSlot } = get()
+          const player = playerIn(play, drawingFor)
+          const assignment = drawingFor ? getAssignment(play, drawingFor, drawingSlot) : undefined
+          if (!player || !assignment || points.length < 2) return
+
+          const isMotion = assignment.kind === 'motion'
+          const bounds = isMotion ? lineupBounds(play.ballOn, rules) : fieldBounds(play.ballOn, rules)
+          const tidy = tidyStroke(
+            points.map((p) => clampPoint(p, bounds)),
+            STROKE,
+          )
+          // Motion ends where the player sets, and players set on the grid.
+          if (isMotion) tidy[tidy.length - 1] = lineupSpot(tidy[tidy.length - 1], play.ballOn, rules)
+
+          const origin = pathOrigin(play, player, assignment)
+          const round = (v: number) => Math.round(v * 100) / 100 + 0
+          const offsets = tidy.map((p) => ({ x: round(p.x - origin.x), y: round(p.y - origin.y) }))
+          const path = dedupe([...assignment.path, ...offsets])
+          if (path.length === assignment.path.length) return
+
+          const next = withAssignment(play, { ...assignment, path })
+          edit(isMotion ? refitRoutes(next, rules) : next)
         },
 
         stopFreehand() {
@@ -607,6 +658,7 @@ export function resetEditor() {
     selectedId: null,
     drawingFor: null,
     drawingSlot: 'main',
+    drawingStyle: 'hand',
   })
   useEditor.temporal.getState().clear()
 }

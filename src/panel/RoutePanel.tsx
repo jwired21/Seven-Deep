@@ -82,6 +82,33 @@ type PickerProps = {
   children?: ReactNode
 }
 
+/** Shown while a path is being drawn: the choice between a curved line and straight pieces, and how to do each. */
+function DrawStyle({ motion = false }: { motion?: boolean }) {
+  const style = useEditor((s) => s.drawingStyle)
+  const { setDrawingStyle } = useEditor.getState()
+  return (
+    <>
+      <div className="segmented" role="group" aria-label="How to draw">
+        <button type="button" aria-pressed={style === 'hand'} onClick={() => setDrawingStyle('hand')}>
+          Curved
+          <small>hold and drag</small>
+        </button>
+        <button type="button" aria-pressed={style === 'points'} onClick={() => setDrawingStyle('points')}>
+          Straight
+          <small>click each corner</small>
+        </button>
+      </div>
+      <p className="muted small">
+        {style === 'hand'
+          ? 'Press on the player, hold the button or your finger down, and drag. The line follows you, curves and loops included. Let go to end it.'
+          : 'Click the field to add corners. They snap to whole yards.'}{' '}
+        {motion ? 'Stay behind the line of scrimmage: the player sets at the last point, and their route starts there. ' : ''}
+        Press Done, Enter, or Esc to finish, and Undo to take back the last piece.
+      </p>
+    </>
+  )
+}
+
 /** A grid of template buttons plus Freehand, for one kind of path. */
 function PathPicker({ title, player, templates, assignment, freehand, slot, children }: PickerProps) {
   const drawing = useEditor((s) => s.drawingFor === player.id && s.drawingSlot === slot)
@@ -119,12 +146,7 @@ function PathPicker({ title, player, templates, assignment, freehand, slot, chil
           {drawingMine ? 'Done' : 'Freehand'}
         </button>
       </div>
-      {drawingMine && (
-        <p className="muted small">
-          Click the field to add points. They snap to whole yards. Press Done, Enter, or Esc to finish, and Undo
-          to take back a point.
-        </p>
-      )}
+      {drawingMine && <DrawStyle />}
       {mine && children}
     </section>
   )
@@ -236,11 +258,7 @@ export function RoutePanel({ player }: { player: Player }) {
           </button>
           {motion && !drawingMotion && clear('motion', 'Clear motion')}
         </div>
-        {drawingMotion && (
-          <p className="muted small">
-            Click behind the line of scrimmage. The player sets at the last point, and their route starts there.
-          </p>
-        )}
+        {drawingMotion && <DrawStyle motion />}
       </section>
 
       {player.label === 'QB' && qbBlitzRunAllowed(rules) && (
